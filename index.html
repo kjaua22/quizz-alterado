@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>⚽ Quiz de Futebol - Arena Master</title>
+  <style>
+    :root {
+      --bg-color: #0d1b1e;
+      --card-bg: #162a2d;
+      --primary-green: #00e676;
+      --accent-yellow: #ffea00;
+      --danger-red: #ff1744;
+      --text-color: #ffffff;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    body {
+      background: radial-gradient(circle at center, #1b3a3e 0%, var(--bg-color) 100%);
+      color: var(--text-color);
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+    }
+
+    .quiz-card {
+      background: var(--card-bg);
+      border: 2px solid #23474c;
+      border-radius: 16px;
+      padding: 30px;
+      max-width: 550px;
+      width: 100%;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+    }
+
+    .header {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    .header h1 {
+      font-size: 1.8rem;
+      color: var(--primary-green);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .progress-bar-container {
+      width: 100%;
+      height: 8px;
+      background: #091315;
+      border-radius: 4px;
+      margin: 15px 0;
+      overflow: hidden;
+    }
+
+    .progress-bar {
+      height: 100%;
+      width: 0%;
+      background: var(--primary-green);
+      transition: width 0.3s ease;
+    }
+
+    .quiz-info {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.9rem;
+      color: #a0c0c4;
+      margin-bottom: 15px;
+    }
+
+    .question {
+      font-size: 1.2rem;
+      margin-bottom: 20px;
+      font-weight: 600;
+      line-height: 1.4;
+    }
+
+    .options-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .btn-option {
+      background: #203e43;
+      border: 1px solid #2e5960;
+      color: #fff;
+      padding: 14px 18px;
+      border-radius: 8px;
+      font-size: 1rem;
+      cursor: pointer;
+      text-align: left;
+      transition: all 0.2s ease;
+    }
+
+    .btn-option:hover {
+      background: #2a5259;
+      border-color: var(--primary-green);
+      transform: translateX(4px);
+    }
+
+    .btn-option.correct {
+      background: var(--primary-green) !important;
+      color: #000;
+      font-weight: bold;
+    }
+
+    .btn-option.incorrect {
+      background: var(--danger-red) !important;
+      color: #fff;
+    }
+
+    .results-panel {
+      text-align: center;
+      display: none;
+    }
+
+    .results-panel h2 {
+      color: var(--accent-yellow);
+      margin-bottom: 15px;
+    }
+
+    .results-panel p {
+      font-size: 1.1rem;
+      margin-bottom: 10px;
+      line-height: 1.5;
+    }
+
+    .btn-restart {
+      background: var(--primary-green);
+      color: #000;
+      border: none;
+      padding: 12px 24px;
+      border-radius: 8px;
+      font-size: 1rem;
+      font-weight: bold;
+      cursor: pointer;
+      margin-top: 20px;
+      text-transform: uppercase;
+      transition: transform 0.2s;
+    }
+
+    .btn-restart:hover {
+      transform: scale(1.05);
+    }
+  </style>
+</head>
+<body>
+
+  <div class="quiz-card">
+    <div class="header">
+      <h1>⚽ Quiz de Futebol ⚽</h1>
+    </div>
+
+    <!-- Tela Principal do Quiz -->
+    <div id="game-panel">
+      <div class="progress-bar-container">
+        <div id="progress-bar" class="progress-bar"></div>
+      </div>
+
+      <div class="quiz-info">
+        <span id="question-counter">Pergunta 1/5</span>
+        <span id="score-counter">Pontos: 0</span>
+      </div>
+
+      <div id="question-text" class="question">Carregando pergunta...</div>
+      <div id="options-container" class="options-grid"></div>
+    </div>
+
+    <!-- Tela de Resultados -->
+    <div id="results-panel" class="results-panel">
+      <h2>Fim de Jogo! 🏆</h2>
+      <p id="final-summary"></p>
+      <button class="btn-restart" id="btn-restart">Jogar Novamente</button>
+    </div>
+  </div>
+
+  <script>
+    // 1. BANCO DE DADOS DAS PERGUNTAS
+    const bancoDePerguntas = [
+      {
+        pergunta: "Qual país venceu a Copa do Mundo de 2022?",
+        opcoes: ["Brasil", "França", "Argentina", "Alemanha"],
+        correta: "Argentina"
+      },
+      {
+        pergunta: "Quem é o maior artilheiro da história da Champions League?",
+        opcoes: ["Lionel Messi", "Cristiano Ronaldo", "Neymar Jr", "Robert Lewandowski"],
+        correta: "Cristiano Ronaldo"
+      },
+      {
+        pergunta: "Qual clube brasileiro possui mais títulos da Copa Libertadores?",
+        opcoes: ["Flamengo", "Palmeiras / São Paulo / Santos / Grêmio", "Corinthians", "Cruzeiro"],
+        correta: "Palmeiras / São Paulo / Santos / Grêmio"
+      },
+      {
+        pergunta: "Em que ano o Brasil conquistou seu primeiro título da Copa do Mundo?",
+        opcoes: ["1950", "1958", "1962", "1970"],
+        correta: "1958"
+      },
+      {
+        pergunta: "Qual jogador é conhecido pelo apelido 'O Rei do Futebol'?",
+        opcoes: ["Maradona", "Zico", "Pelé", "Garrincha"],
+        correta: "Pelé"
+      }
+    ];
+
+    // 2. ALGORITMOS DE ALEATORIEDADE E REGRAS DE NEGÓCIO
+    function embaralharLista(lista) {
+      const copia = [...lista];
+      for (let i = copia.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [copia[i], copia[j]] = [copia[j], copia[i]];
+      }
+      return copia;
+    }
+
+    function obterStatusJogador(porcentagem) {
+      if (porcentagem === 100) return "⚽ CRAQUE DO JOGO (Nível Legendário)";
+      if (porcentagem >= 70)  return "🏃 TITULAR INCONTESTÁVEL";
+      if (porcentagem >= 40)  return "🪑 JOGADOR DE BANCO";
+      return "👟 PERNA DE PAU (Precisa Treinar Mais)";
+    }
+
+    // 3. ESTADO DA APLICAÇÃO E ELEMENTOS DO DOM
+    let perguntasEmbaralhadas = [];
+    let indiceAtual = 0;
+    let pontuacao = 0;
+    let acertosSeguidos = 0;
+
+    const gamePanel = document.getElementById('game-panel');
+    const resultsPanel = document.getElementById('results-panel');
+    const questionText = document.getElementById('question-text');
+    const optionsContainer = document.getElementById('options-container');
+    const questionCounter = document.getElementById('question-counter');
+    const scoreCounter = document.getElementById('score-counter');
+    const progressBar = document.getElementById('progress-bar');
+    const finalSummary = document.getElementById('final-summary');
+    const btnRestart = document.getElementById('btn-restart');
+
+    // 4. LÓGICA DO JOGO
+    function iniciarJogo() {
+      // Embaralha as perguntas no início de cada partida
+      perguntasEmbaralhadas = embaralharLista(bancoDePerguntas);
+      indiceAtual = 0;
+      pontuacao = 0;
+      acertosSeguidos = 0;
+
+      gamePanel.style.display = 'block';
+      resultsPanel.style.display = 'none';
+      scoreCounter.textContent = 'Pontos: 0';
+
+      carregarPergunta();
+    }
+
+    function carregarPergunta() {
+      const perguntaAtual = perguntasEmbaralhadas[indiceAtual];
+
+      questionCounter.textContent = `Pergunta ${indiceAtual + 1}/${perguntasEmbaralhadas.length}`;
+      progressBar.style.width = `${(indiceAtual / perguntasEmbaralhadas.length) * 100}%`;
+      questionText.textContent = perguntaAtual.pergunta;
+
+      optionsContainer.innerHTML = '';
+      
+      // Embaralha as alternativas da pergunta atual
+      const alternativas = embaralharLista(perguntaAtual.opcoes);
+
+      // Iteração usando "for...of"
+      for (const opcao of alternativas) {
+        const botao = document.createElement('button');
+        botao.className = 'btn-option';
+        botao.textContent = opcao;
+        botao.addEventListener('click', () => verificarResposta(opcao, perguntaAtual.correta, botao));
+        optionsContainer.appendChild(botao);
+      }
+    }
+
+    function verificarResposta(opcaoSelecionada, opcaoCorreta, elementoBotao) {
+      const botoes = optionsContainer.querySelectorAll('.btn-option');
+      botoes.forEach(b => b.disabled = true);
+
+      // Uso de Estruturas Condicionais (if / else)
+      if (opcaoSelecionada === opcaoCorreta) {
+        acertosSeguidos++;
+        const bonusCombo = acertosSeguidos * 10;
+        pontuacao += 100 + bonusCombo;
+        elementoBotao.classList.add('correct');
+      } else {
+        acertosSeguidos = 0;
+        elementoBotao.classList.add('incorrect');
+        
+        // Uso de "for...of" com Condição de Parada (break)
+        for (const b of botoes) {
+          if (b.textContent === opcaoCorreta) {
+            b.classList.add('correct');
+            break; // Interrompe o loop assim que encontra a resposta correta
+          }
+        }
+      }
+
+      scoreCounter.textContent = `Pontos: ${pontuacao}`;
+
+      setTimeout(() => {
+        indiceAtual++;
+        if (indiceAtual < perguntasEmbaralhadas.length) {
+          carregarPergunta();
+        } else {
+          finalizarJogo();
+        }
+      }, 1200);
+    }
+
+    function finalizarJogo() {
+      progressBar.style.width = '100%';
+      gamePanel.style.display = 'none';
+      resultsPanel.style.display = 'block';
+
+      const totalPerguntas = perguntasEmbaralhadas.length;
+      const porcentagem = Math.min(100, Math.round((pontuacao / (totalPerguntas * 110)) * 100));
+      const status = obterStatusJogador(porcentagem);
+
+      // Aplicação do Método .replace() em Strings
+      const templateRelatorio = "Pontuação Total: <strong>[PONTOS] pts</strong><br>Desempenho: <strong>[STATUS]</strong>";
+      const resumoFormatado = templateRelatorio
+        .replace("[PONTOS]", pontuacao)
+        .replace("[STATUS]", status);
+
+      finalSummary.innerHTML = resumoFormatado;
+    }
+
+    btnRestart.addEventListener('click', iniciarJogo);
+
+    // Inicialização do Quiz
+    iniciarJogo();
+  </script>
+</body>
+</html>
